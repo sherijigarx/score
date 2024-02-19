@@ -41,7 +41,7 @@ class SpeakerRecognizer:
             run_opts={"device": self.device},
             savedir=os.path.join("/tmp", self.spk_model_name),
         )
-        self.embeddings_dataset = load_dataset("Matthijs/cmu-arctic-xvectors", split="validation")
+
 
 
     def create_speaker_embedding(self, audio_file_path):
@@ -65,6 +65,7 @@ class TextToSpeechModels:
         self.processor = SpeechT5Processor.from_pretrained(model_path)
         self.model = SpeechT5ForTextToSpeech.from_pretrained(model_path)
         self.vocoder = SpeechT5HifiGan.from_pretrained(vocoder_model_path)
+        self.embeddings_dataset = load_dataset("Matthijs/cmu-arctic-xvectors", split="validation")
         
         # Initialize SpeakerRecognizer
         self.speaker_recognizer = SpeakerRecognizer()
