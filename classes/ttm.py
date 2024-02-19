@@ -89,7 +89,7 @@ class MusicGenerationService(AIModelService):
         uids = self.metagraph.uids.tolist()
         # If there are more uids than scores, add more weights.
         bt.logging.info(f"Scores::::::::::::::::::::::::::::::::::::::::::::::::: {self.scores}")
-        bt.logging.info(f"META GRAPH::::::::::::::::::::::::::::::::::::::::::::::::: {self.metagraph.W}")
+        bt.logging.info(f"META GRAPH::::::::::::::::::::::::::::::::::::::::::::::::: {self.metagraph.E}")
         if len(uids) > len(self.scores):
             bt.logging.trace("Adding more weights")
             size_difference = len(uids) - len(self.scores)
