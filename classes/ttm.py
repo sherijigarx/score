@@ -75,7 +75,7 @@ class MusicGenerationService(AIModelService):
                 await self.main_loop_logic(step)
                 step += 1
                 await asyncio.sleep(0.5)  # Adjust the sleep time as needed
-                if step % 500 == 0:
+                if step % 25 == 0:
                     lib.utils.try_update()
             except KeyboardInterrupt:
                 print("Keyboard interrupt detected. Exiting MusicGenerationService.")
@@ -86,10 +86,6 @@ class MusicGenerationService(AIModelService):
 
     async def main_loop_logic(self, step):
         # Sync and update weights logic
-        if step % 30 == 0:
-            self.metagraph.sync(subtensor=self.subtensor)
-            bt.logging.info(f"🔄 Syncing metagraph with subtensor.")
-        
         uids = self.metagraph.uids.tolist()
         # If there are more uids than scores, add more weights.
         bt.logging.info(f"Scores:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: {self.scores}")
