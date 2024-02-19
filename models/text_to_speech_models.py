@@ -41,6 +41,8 @@ class SpeakerRecognizer:
             run_opts={"device": self.device},
             savedir=os.path.join("/tmp", self.spk_model_name),
         )
+        self.embeddings_dataset = load_dataset("Matthijs/cmu-arctic-xvectors", split="validation")
+
 
     def create_speaker_embedding(self, audio_file_path):
         waveform, sample_rate = torchaudio.load(audio_file_path)
@@ -81,9 +83,8 @@ class TextToSpeechModels:
             speaker_embeddings = self.speaker_recognizer.create_speaker_embedding(audio_file_path)
         else:
             # Use default embeddings if no audio file is provided
-            embeddings_dataset = load_dataset("Matthijs/cmu-arctic-xvectors", split="validation")
-            random_integer = torch.randint(0, len(embeddings_dataset), (1,)).item()
-            speaker_embeddings = torch.tensor(embeddings_dataset[random_integer]["xvector"]).unsqueeze(0).to(self.device)
+            random_integer = torch.randint(0, len(self.embeddings_dataset), (1,)).item()
+            speaker_embeddings = torch.tensor(self.embeddings_dataset[random_integer]["xvector"]).unsqueeze(0).to(self.device)
 
         # Generate speech
         generated_speech = self.model.generate(inputs["input_ids"], speaker_embeddings= speaker_embeddings, vocoder=self.vocoder)
