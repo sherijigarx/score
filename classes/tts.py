@@ -349,9 +349,9 @@ class TextToSpeechService(AIModelService):
     
     def update_weights(self, scores):
         # # Calculate new weights from scores
-        # if torch.isnan(scores).all():
-        #     bt.logging.trace("All scores are nan, setting all weights to 0")
-        #     scores = torch.zeros_like(scores)
+        if torch.isnan(scores).all():
+            bt.logging.trace("All scores are nan, setting all weights to 0")
+            scores = torch.zeros_like(scores)
 
         # Process scores for blacklisted miners
         for idx, uid in enumerate(self.metagraph.uids):
