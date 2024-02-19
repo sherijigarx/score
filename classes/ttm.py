@@ -86,12 +86,13 @@ class MusicGenerationService(AIModelService):
 
     async def main_loop_logic(self, step):
         # Sync and update weights logic
-        if step % 5 == 0:
+        if step % 30 == 0:
             self.metagraph.sync(subtensor=self.subtensor)
             bt.logging.info(f"🔄 Syncing metagraph with subtensor.")
         
         uids = self.metagraph.uids.tolist()
         # If there are more uids than scores, add more weights.
+        bt.logging.info(f"Scores:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: {self.scores}")
         if len(uids) > len(self.scores):
             bt.logging.trace("Adding more weights")
             size_difference = len(uids) - len(self.scores)
