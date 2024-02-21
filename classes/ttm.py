@@ -85,11 +85,6 @@ class MusicGenerationService(AIModelService):
                 traceback.print_exc()
 
     async def main_loop_logic(self, step):
-        # Sync and update weights logic
-        if step % 5 == 0:
-            self.metagraph.sync(subtensor=self.subtensor)
-            bt.logging.info(f"🔄 Syncing metagraph with subtensor.")
-        
         uids = self.metagraph.uids.tolist()
         # If there are more uids than scores, add more weights.
         if len(uids) > len(self.scores):
@@ -111,7 +106,7 @@ class MusicGenerationService(AIModelService):
                     continue
                 self.p_index = p_index
                 filtered_axons = self.get_filtered_axons_from_combinations()
-                bt.logging.info(f"--------------------------------- Prompt are being used locally for Text-To-Music---------------------------------")
+                bt.logging.info(f"------------------ Prompt are being used locally for Text-To-Music--------------------")
                 bt.logging.info(f"______________TTM-Prompt______________: {lprompt}")
                 responses = self.query_network(filtered_axons,lprompt)
                 self.process_responses(filtered_axons,responses, lprompt)

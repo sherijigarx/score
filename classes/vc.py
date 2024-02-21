@@ -154,10 +154,6 @@ class VoiceCloningService(AIModelService):
     async def main_loop_logic(self, step):
         tasks = []
         try:
-            if step % 20 == 0:
-                self.metagraph.sync(subtensor=self.subtensor)
-                bt.logging.info(f"🔄 Syncing metagraph with subtensor.")
-
             files = os.listdir(self.source_path)
             sound_files = [f for f in files if f.endswith(".wav") or f.endswith(".mp3")]
 
