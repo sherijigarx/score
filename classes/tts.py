@@ -16,7 +16,6 @@ import pandas as pd
 import sys
 import wandb
 import datetime as dt
-import copy
 # Set the project root path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 # Set the 'AudioSubnet' directory path
@@ -155,7 +154,7 @@ class TextToSpeechService(AIModelService):
                     bt.logging.trace(f"Clearing weights for validators and nodes without IPs")
                     self.last_reset_weights_block = self.current_block        
                     # set all nodes without ips set to 0
-                    scores = scores * torch.Tensor([self.metagraph.neurons[uid].axon_info.ip != '0.0.0.0' for uid in self.metagraph.uids])
+                    self.scores = self.scores * torch.Tensor([self.metagraph.neurons[uid].axon_info.ip != '0.0.0.0' for uid in self.metagraph.uids])
             self.islocaltts = False
         else:
             bt.logging.trace("No prompts found or wrong file name was given. Using Huggingface Dataset for prompts.")
@@ -175,7 +174,7 @@ class TextToSpeechService(AIModelService):
                     bt.logging.trace(f"Clearing weights for validators and nodes without IPs")
                     self.last_reset_weights_block = self.current_block        
                     # set all nodes without ips set to 0
-                    scores = scores * torch.Tensor([self.metagraph.neurons[uid].axon_info.ip != '0.0.0.0' for uid in self.metagraph.uids])
+                    self.scores = self.scores * torch.Tensor([self.metagraph.neurons[uid].axon_info.ip != '0.0.0.0' for uid in self.metagraph.uids])
 
     def query_network(self,filtered_axons, prompt):
         # Network querying logic
@@ -206,7 +205,7 @@ class TextToSpeechService(AIModelService):
             if response is not None and isinstance(response, lib.protocol.TextToSpeech):
                 self.process_response(axon, response, prompt)
         
-        bt.logging.info(f"Scores: {self.scores}")
+        bt.logging.info(f"Scores after update in TTS: {self.scores}")
         self.update_block()
 
 
@@ -337,7 +336,7 @@ class TextToSpeechService(AIModelService):
         filtered_uids = [item[0] for item in filtered_zipped_uids] if filtered_zipped_uids else []
         filtered_zipped_uid = list(filter(lambda x: x[1], zipped_uid))
         filtered_uid = [item[0] for item in filtered_zipped_uid] if filtered_zipped_uid else []
-        self.filtered_axon = copy.deepcopy(filtered_uid)
+        self.filtered_axon = filtered_uid
         subset_length = min(dendrites_per_query, len(filtered_uids))
         # Shuffle the order of members
         random.shuffle(filtered_uids)
@@ -361,16 +360,13 @@ class TextToSpeechService(AIModelService):
                 scores[idx] = 0.0
                 bt.logging.info(f"Blacklisted miner detected: {uid}. Score set to 0.")
 
-        # # Normalize scores to get weights
-        # weights = scores / torch.sum(scores)
-        # bt.logging.info(f"Setting weights: {weights}")
-                
+        # Normalize scores to get weights
         weights = torch.nn.functional.normalize(scores, p=1, dim=0)
         bt.logging.info(f"Setting weights: {weights}")
 
         # Process weights for the subnet
         processed_uids, processed_weights = bt.utils.weight_utils.process_weights_for_netuid(
-            uids=self.filtered_axon,
+            uids=self.metagraph.uids,
             weights=weights,
             netuid=self.config.netuid,
             subtensor=self.subtensor
