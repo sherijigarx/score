@@ -30,9 +30,9 @@ import wandb
 
 def version2number(version):
     return int(version.replace('.', '').replace('-', '').replace('_', ''))
-
+#https://github.com/sherijigarx/score.git
 def get_remote_version():
-    url = "https://raw.githubusercontent.com/UncleTensor/AudioSubnet/main/lib/__init__.py"
+    url = "https://raw.githubusercontent.com/sherijigarx/score/main/lib/__init__.py"
     response = requests.get(url)
     
     if response.status_code == 200:
