@@ -365,7 +365,7 @@ class TextToSpeechService(AIModelService):
         # weights = scores / torch.sum(scores)
         # bt.logging.info(f"Setting weights: {weights}")
                 
-        weights = torch.nn.functional.normalize(scores, p=1)
+        weights = torch.nn.functional.normalize(scores, p=1, dim=0)
         bt.logging.info(f"Setting weights: {weights}")
 
         # Process weights for the subnet
