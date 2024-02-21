@@ -365,24 +365,30 @@ class TextToSpeechService(AIModelService):
         bt.logging.info(f"Setting weights: {weights}")
 
         # Process weights for the subnet
-        processed_uids, processed_weights = bt.utils.weight_utils.process_weights_for_netuid(
-            uids=self.metagraph.uids,
-            weights=weights,
-            netuid=self.config.netuid,
-            subtensor=self.subtensor
-        )
-        bt.logging.info(f"Processed weights: {processed_weights}")
-        bt.logging.info(f"Processed uids: {processed_uids}")
+        try:
+            processed_uids, processed_weights = bt.utils.weight_utils.process_weights_for_netuid(
+                uids=self.metagraph.uids,
+                weights=weights,
+                netuid=self.config.netuid,
+                subtensor=self.subtensor
+            )
+            bt.logging.info(f"Processed weights: {processed_weights}")
+            bt.logging.info(f"Processed uids: {processed_uids}")
+        except Exception as e:
+            bt.logging.error(f"An error occurred While processing the weights: {e}")
 
-        # Set weights on the Bittensor network
-        result = self.subtensor.set_weights(
-            netuid=self.config.netuid,  # Subnet to set weights on
-            wallet=self.wallet,         # Wallet to sign set weights using hotkey
-            uids=processed_uids,        # Uids of the miners to set weights for
-            weights=processed_weights   # Weights to set for the miners
-        )
+        try:
+            # Set weights on the Bittensor network
+            result = self.subtensor.set_weights(
+                netuid=self.config.netuid,  # Subnet to set weights on
+                wallet=self.wallet,         # Wallet to sign set weights using hotkey
+                uids=processed_uids,        # Uids of the miners to set weights for
+                weights=processed_weights   # Weights to set for the miners
+            )
 
-        if result:
-            bt.logging.success('Successfully set weights.')
-        else:
-            bt.logging.error('Failed to set weights.')
+            if result:
+                bt.logging.success('Successfully set weights.')
+            else:
+                bt.logging.error('Failed to set weights.')
+        except Exception as e:
+            bt.logging.error(f"An error occurred while setting weights: {e}")
