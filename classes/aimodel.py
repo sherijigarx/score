@@ -37,7 +37,7 @@ class AIModelService:
         self.max_mse = self.config.max_mse
         self.pt_file = hf_hub_download(repo_id="lukewys/laion_clap", filename="630k-best.pt")
         if AIModelService._scores is None:
-            AIModelService._scores = torch.tensor(self.metagraph.E)
+            AIModelService._scores = self.metagraph.E.clone().detach()
         self.scores = AIModelService._scores
         self.uid = self.metagraph.hotkeys.index(self.wallet.hotkey.ss58_address)
 
