@@ -36,9 +36,8 @@ class AIModelService:
         self.vcdnp = self.config.vcdnp
         self.max_mse = self.config.max_mse
         self.pt_file = hf_hub_download(repo_id="lukewys/laion_clap", filename="630k-best.pt")
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         if AIModelService._scores is None:
-            AIModelService._scores = torch.tensor(self.metagraph.E).to(self.device)
+            AIModelService._scores = torch.tensor(self.metagraph.E)
         self.scores = AIModelService._scores
         self.uid = self.metagraph.hotkeys.index(self.wallet.hotkey.ss58_address)
 
