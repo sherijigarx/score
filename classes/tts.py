@@ -16,6 +16,7 @@ import pandas as pd
 import sys
 import wandb
 import datetime as dt
+import copy
 # Set the project root path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 # Set the 'AudioSubnet' directory path
@@ -109,7 +110,7 @@ class TextToSpeechService(AIModelService):
                 await self.main_loop_logic(step)
                 step += 1
                 await asyncio.sleep(0.5)  # Adjust the sleep time as needed
-                if step % 10 == 0 and self.config.auto_update == 'yes':
+                if step % 50 == 0 and self.config.auto_update == 'yes':
                     lib.utils.try_update()
             except KeyboardInterrupt:
                 print("Keyboard interrupt detected. Exiting TextToSpeechService.")
@@ -120,7 +121,7 @@ class TextToSpeechService(AIModelService):
 
     async def main_loop_logic(self, step):
         # Sync and update weights logic
-        if step % 25 == 0:
+        if step % 5 == 0:
             self.metagraph.sync(subtensor=self.subtensor)
             bt.logging.info(f"🔄 Syncing metagraph with subtensor.")
         
@@ -336,7 +337,7 @@ class TextToSpeechService(AIModelService):
         filtered_uids = [item[0] for item in filtered_zipped_uids] if filtered_zipped_uids else []
         filtered_zipped_uid = list(filter(lambda x: x[1], zipped_uid))
         filtered_uid = [item[0] for item in filtered_zipped_uid] if filtered_zipped_uid else []
-        self.filtered_axon = filtered_uid
+        self.filtered_axon = copy.deepcopy(filtered_uid)
         subset_length = min(dendrites_per_query, len(filtered_uids))
         # Shuffle the order of members
         random.shuffle(filtered_uids)
@@ -349,9 +350,9 @@ class TextToSpeechService(AIModelService):
     
     def update_weights(self, scores):
         # # Calculate new weights from scores
-        if torch.isnan(scores).all():
-            bt.logging.trace("All scores are nan, setting all weights to 0")
-            scores = torch.zeros_like(scores)
+        # if torch.isnan(scores).all():
+        #     bt.logging.trace("All scores are nan, setting all weights to 0")
+        #     scores = torch.zeros_like(scores)
 
         # Process scores for blacklisted miners
         for idx, uid in enumerate(self.metagraph.uids):
@@ -360,13 +361,16 @@ class TextToSpeechService(AIModelService):
                 scores[idx] = 0.0
                 bt.logging.info(f"Blacklisted miner detected: {uid}. Score set to 0.")
 
-        # Normalize scores to get weights
-        weights = scores / torch.sum(scores)
+        # # Normalize scores to get weights
+        # weights = scores / torch.sum(scores)
+        # bt.logging.info(f"Setting weights: {weights}")
+                
+        weights = torch.nn.functional.normalize(scores, p=1)
         bt.logging.info(f"Setting weights: {weights}")
 
         # Process weights for the subnet
         processed_uids, processed_weights = bt.utils.weight_utils.process_weights_for_netuid(
-            uids=self.metagraph.uids,
+            uids=self.filtered_axon,
             weights=weights,
             netuid=self.config.netuid,
             subtensor=self.subtensor

@@ -35,9 +35,10 @@ class AIModelService:
         self.setup_metagraph()
         self.vcdnp = self.config.vcdnp
         self.max_mse = self.config.max_mse
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.pt_file = hf_hub_download(repo_id="lukewys/laion_clap", filename="630k-best.pt")
         if AIModelService._scores is None:
-            AIModelService._scores = torch.tensor(self.metagraph.E, dtype=torch.float32)
+            AIModelService._scores = torch.zeros((self.metagraph.n)).to(self.device)
         self.scores = AIModelService._scores
         self.uid = self.metagraph.hotkeys.index(self.wallet.hotkey.ss58_address)
 
@@ -46,7 +47,7 @@ class AIModelService:
         parser = argparse.ArgumentParser()
 
         # Add arguments as per your original script
-        parser.add_argument("--alpha", default=0.9, type=float, help="The weight moving average scoring.")
+        parser.add_argument("--alpha", default=0.3, type=float, help="The weight moving average scoring.")
         parser.add_argument("--custom", default="my_custom_value", help="Adds a custom value to the parser.")
         parser.add_argument("--netuid", type=int, default=16, help="The chain subnet uid.")
         parser.add_argument("--vcdnp", type=int, default=10, help="Number of miners to query for each forward call.")
@@ -152,7 +153,7 @@ class AIModelService:
             zipped_uids = list(zip(uids, self.metagraph.axons))
             uid_index = list(zip(*filter(lambda x: x[1] == axon, zipped_uids)))[0][0]
             alpha = self.config.alpha
-            self.scores[uid_index] = alpha * self.scores[uid_index] + (1 - alpha) * (-1)
+            self.scores[uid_index] = alpha * self.scores[uid_index] + (1 - alpha) * (-0.5)
             if self.scores[uid_index] < 0:
                 self.scores[uid_index] = 0
             # Log the updated score
